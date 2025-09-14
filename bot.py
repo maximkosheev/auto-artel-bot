@@ -1,5 +1,4 @@
 import asyncio
-import datetime
 import logging
 
 from aiogram import Bot, Dispatcher, Router
@@ -9,6 +8,7 @@ from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_applicati
 from aiohttp import web
 
 from config import config, admins
+from handlers import register_client
 from handlers.admin_consumer import AdminConsumer
 
 router = Router()
@@ -17,14 +17,16 @@ bot = Bot(token=config.bot_token)
 dp = Dispatcher()
 admin_consumer = AdminConsumer(config.amq_uri, bot)
 
+NAME = "The best service"
+
 
 @router.message(Command("start"))
 async def cmd_start(message: Message, client: Client) -> None:
-    phrases = [f"Приветствую тебя <b>{message.chat.full_name}</b> в проекте <b>НУТРИЦИЛОИД</b>"]
+    phrases = [f"Приветствую тебя <b>{message.chat.full_name}</b> в системе <b>{NAME}</b>"]
     if client:
-        phrases.append(f"Вы уже зарегистрированы, ваш идентификатор {client.telegram_id}")
+        phrases.append(f"Вы уже зарегистрированы. Для работы воспользуйтесь меню бота")
     else:
-        phrases.append("Перед началом работы нужно пройти регистрацию.\nНажмите /register")
+        phrases.append("Перед началом работы нужно пройти короткую регистрацию.\nНажмите /register")
     await message.answer(".\n".join(phrases), parse_mode="HTML")
 
 
@@ -50,8 +52,7 @@ async def on_shutdown() -> None:
 def main():
     dp.include_routers(
         router,
-        register_client.router,
-        fat_secret.router
+        register_client.router
     )
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
