@@ -4,18 +4,15 @@ import logging
 from aiogram import Bot, Dispatcher, Router
 from aiogram.filters import Command
 from aiogram.types import Message
-from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
-from aiohttp import web
 
-from config import config, admins
+from config import config, admins, PROJECT_NAME, BOT_NAME
 from handlers import register_client
 from handlers.admin_consumer import AdminConsumer
 from middlewares.get_client import GetClientMiddleware
 from models.client import Client
 
-router = Router()
-
 bot = Bot(token=config.bot_token)
+router = Router()
 dp = Dispatcher()
 admin_consumer = AdminConsumer(config.amq_connection_url, bot)
 
@@ -38,18 +35,17 @@ async def notify_admins(message):
 async def on_startup() -> None:
     await admin_consumer.setup()
     asyncio.create_task(admin_consumer.complete_registration_handler(), name="complete_registration_handler")
-    await bot.set_webhook(config.bot_webhook_uri)
-    await notify_admins(f"Бот {config.BOT_NAME} запущен")
+    await notify_admins(f"Бот {BOT_NAME} запущен")
 
 
 async def on_shutdown() -> None:
-    await notify_admins(f"Бот {config.BOT_NAME} остановлен")
+    await notify_admins(f"Бот {BOT_NAME} остановлен")
     await bot.delete_webhook(drop_pending_updates=True)
     await bot.session.close()
     await admin_consumer.close()
 
 
-def main():
+async def main():
     dp.include_routers(
         router,
         register_client.router
@@ -58,15 +54,11 @@ def main():
     dp.shutdown.register(on_shutdown)
     dp.message.outer_middleware(GetClientMiddleware())
 
-    app = web.Application()
-    webhook_requests_handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
-    webhook_requests_handler.register(app, path=config.webhook_path)
-    setup_application(app, dp, bot=bot)
-    web.run_app(app, host="0.0.0.0", port=9000)
+    await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot)
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG,
                         format='[%(asctime)s.%(msecs)03d] [%(process)d] [%(levelname)1.1s] [%(name)s]:\t%(message)s',
                         datefmt='%Y.%m.%d %H:%M:%S')
-    main()
+    asyncio.run(main())

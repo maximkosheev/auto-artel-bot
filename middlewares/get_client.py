@@ -3,6 +3,7 @@ from typing import Callable, Dict, Any, Awaitable
 
 from aiogram import BaseMiddleware
 from aiogram.types import Message
+
 from services.clients_service import ClientsService
 
 logger = logging.getLogger(__name__)
@@ -18,6 +19,9 @@ class GetClientMiddleware(BaseMiddleware):
             service = ClientsService()
             client = await service.get_by_telegram_id(telegram_id)
             data['client'] = client
+            return await handler(event, data)
         except Exception as ex:
             logger.error("Failed to get client by telegram_id", exc_info=ex)
-        return await handler(event, data)
+            await event.answer(f"Случилось что-то нехорошее 😟, но мы уже в курсе и чиним. "
+                               f"Скоро сервис снова будет работать!",
+                               parse_mode="HTML")

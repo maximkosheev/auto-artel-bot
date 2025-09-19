@@ -2,12 +2,21 @@ from pydantic import SecretStr, HttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+PROJECT_NAME = "The Best Service"
+BOT_NAME = "TheBestServiceBot"
+
+
 class Settings(BaseSettings):
     BOT_TOKEN: SecretStr
-    BOT_BASE_URL: SecretStr
+    BOT_WEBHOOK_BASE_URL: str
+
     AUTO_ARTEL_API_BASE_URL: HttpUrl
     AUTO_ARTEL_API_USER: str
     AUTO_ARTEL_API_PASSWORD: SecretStr
+
+    AMQ_URL: str
+    AMQ_USER: str
+    AMQ_PASSWORD: SecretStr
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -20,7 +29,7 @@ class Settings(BaseSettings):
 
     @property
     def bot_webhook_uri(self):
-        return self.BOT_WEBHOOK_URI.get_secret_value()
+        return f"{self.BOT_WEBHOOK_BASE_URL}/{self.bot_token}"
 
     @property
     def webhook_path(self):
@@ -37,6 +46,11 @@ class Settings(BaseSettings):
     @property
     def auto_artel_api_password(self):
         return self.AUTO_ARTEL_API_PASSWORD.get_secret_value()
+
+    @property
+    def amq_connection_url(self):
+        credentials = f"{self.AMQ_USER}:{self.AMQ_PASSWORD.get_secret_value()}"
+        return self.AMQ_URL.replace("://", f"://{credentials}@")
 
 
 config = Settings()
