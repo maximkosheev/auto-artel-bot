@@ -9,7 +9,12 @@ from models.client import Client
 import keyboards
 
 bot = Bot(token=config.bot_token)
+
 router = Router()
+
+client_router = Router()
+client_router.message.filter(MagicData(F.client))
+
 out_of_order_router = Router()
 out_of_order_router.message.filter(MagicData(F.server_error.is_(True)))
 out_of_order_router.callback_query.filter(MagicData(F.server_error.is_(True)))
@@ -26,17 +31,17 @@ async def handle_error(message: Message):
                          parse_mode="HTML")
 
 
-@router.message(F.client, Command("start"))
+@client_router.message(Command("start"))
 async def cmd_start_client(message: Message, client: Client):
     phrases = [f"Приветствую тебя <b>{client.name}</b> в системе <b>{PROJECT_NAME}</b>",
                f"Вы уже зарегистрированы. Для работы воспользуйтесь меню бота"]
     await message.answer(".\n".join(phrases), reply_markup=keyboards.client_default_keyboard(), parse_mode="HTML")
 
 
-@router.message(F.client, F.text.lower.contains("мои транспортные средства"))
+@client_router.message()
 async def cmd_vehicle(message: Message, client: Client):
     await message.answer("Ща я тебе покажу твои транспортные средства",
-                         reply_markup=keyboards.client_vehicle_keyboard(['Машинка 1', 'Машинка 2']),
+                         reply_markup=keyboards.client_vehicle_keyboard(client.vehicleList),
                          parse_mode="HTML")
 
 

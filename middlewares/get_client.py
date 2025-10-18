@@ -17,9 +17,8 @@ class GetClientMiddleware(BaseMiddleware):
         try:
             telegram_id = event.from_user.id
             service = ClientsService()
-            client = await service.get_by_telegram_id(telegram_id)
-            data['client'] = client
-            return await handler(event, data)
+            data['client'] = await service.get_by_telegram_id(telegram_id)
+            logger.info(f"Client: {data['client']}")
         except Exception as ex:
             logger.error("Failed to get client by telegram_id", exc_info=ex)
             data['server_error'] = True

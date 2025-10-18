@@ -5,6 +5,7 @@ from bot import (
     bot,
     dp,
     router,
+    client_router,
     out_of_order_router,
     admin_consumer,
     notify_admins
@@ -30,8 +31,9 @@ async def on_shutdown() -> None:
 async def main():
     dp.include_routers(
         out_of_order_router,
-        router,
-        register_client.router
+        client_router,
+        register_client.router,
+        router
     )
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)

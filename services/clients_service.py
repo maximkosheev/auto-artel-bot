@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 CLIENTS_PATH = f"{config.auto_artel_api_base_url}/clients/"
 REGISTER_PATH = CLIENTS_PATH
-DETAIL_PATH = f"{CLIENTS_PATH}detail/"
+DETAIL_PATH = f"{CLIENTS_PATH}<telegram_id>/detail/"
 
 
 class ClientsService:
@@ -28,15 +28,12 @@ class ClientsService:
             return False
 
     async def get_by_telegram_id(self, telegram_id) -> Client | None:
-        resp = await self.auth_client.get(DETAIL_PATH, params={
+        resp = await self.auth_client.get(DETAIL_PATH, path_params={
             'telegram_id': telegram_id
         })
         if resp.status == 200:
-            clients = await resp.json()
-            if len(clients) > 0:
-                return Client.model_validate(clients[0])
-            else:
-                return None
+            client = await resp.json()
+            return Client.model_validate(client)
         elif resp.status == 404:
             return None
         else:

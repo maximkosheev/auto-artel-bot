@@ -126,6 +126,10 @@ class JWTAuthInterceptor:
         if not token_available:
             raise aiohttp.ClientError("Failed to obtain authentication token")
 
+        path_params = kwargs.pop('path_params', {})
+        for path_param in path_params:
+            url = url.replace(f"<{path_param}>", str(path_params[path_param]))
+
         headers = kwargs.get('headers', {})
         kwargs['headers'] = self._inject_auth_header(headers)
 
