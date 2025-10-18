@@ -1,32 +1,49 @@
-import asyncio
-import logging
-
 from aiogram import Bot, Dispatcher, Router
-from aiogram.filters import Command
+from aiogram import F
+from aiogram.filters import Command, MagicData
 from aiogram.types import Message
-from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
-from aiohttp import web
 
-from config import config, admins
-from handlers import register_client
+from config import config, admins, PROJECT_NAME
 from handlers.admin_consumer import AdminConsumer
-from middlewares.get_client import GetClientMiddleware
 from models.client import Client
-
-router = Router()
+import keyboards
 
 bot = Bot(token=config.bot_token)
+router = Router()
+out_of_order_router = Router()
+out_of_order_router.message.filter(MagicData(F.server_error.is_(True)))
+out_of_order_router.callback_query.filter(MagicData(F.server_error.is_(True)))
+
 dp = Dispatcher()
 admin_consumer = AdminConsumer(config.amq_connection_url, bot)
 
 
+@out_of_order_router.message()
+async def handle_error(message: Message):
+    print(f"Error message: {message.text}")
+    await message.answer(f"Случилось что-то нехорошее 😟, но мы уже в курсе и чиним. "
+                         f"Скоро сервис снова будет работать!",
+                         parse_mode="HTML")
+
+
+@router.message(F.client, Command("start"))
+async def cmd_start_client(message: Message, client: Client):
+    phrases = [f"Приветствую тебя <b>{client.name}</b> в системе <b>{PROJECT_NAME}</b>",
+               f"Вы уже зарегистрированы. Для работы воспользуйтесь меню бота"]
+    await message.answer(".\n".join(phrases), reply_markup=keyboards.client_default_keyboard(), parse_mode="HTML")
+
+
+@router.message(F.client, F.text.lower.contains("мои транспортные средства"))
+async def cmd_vehicle(message: Message, client: Client):
+    await message.answer("Ща я тебе покажу твои транспортные средства",
+                         reply_markup=keyboards.client_vehicle_keyboard(['Машинка 1', 'Машинка 2']),
+                         parse_mode="HTML")
+
+
 @router.message(Command("start"))
-async def cmd_start(message: Message, client: Client) -> None:
-    phrases = [f"Приветствую тебя <b>{message.chat.full_name}</b> в системе <b>{PROJECT_NAME}</b>"]
-    if client:
-        phrases.append(f"Вы уже зарегистрированы. Для работы воспользуйтесь меню бота")
-    else:
-        phrases.append("Перед началом работы нужно пройти короткую регистрацию.\nНажмите /register")
+async def cmd_start(message: Message) -> None:
+    phrases = [f"Приветствую тебя <b>{message.chat.full_name}</b> в системе <b>{PROJECT_NAME}</b>",
+               "Перед началом работы нужно пройти короткую регистрацию.\nНажмите /register"]
     await message.answer(".\n".join(phrases), parse_mode="HTML")
 
 
@@ -35,38 +52,3 @@ async def notify_admins(message):
         await bot.send_message(chat_id=admin_id, text=message)
 
 
-async def on_startup() -> None:
-    await admin_consumer.setup()
-    asyncio.create_task(admin_consumer.complete_registration_handler(), name="complete_registration_handler")
-    await bot.set_webhook(config.bot_webhook_uri)
-    await notify_admins(f"Бот {config.BOT_NAME} запущен")
-
-
-async def on_shutdown() -> None:
-    await notify_admins(f"Бот {config.BOT_NAME} остановлен")
-    await bot.delete_webhook(drop_pending_updates=True)
-    await bot.session.close()
-    await admin_consumer.close()
-
-
-def main():
-    dp.include_routers(
-        router,
-        register_client.router
-    )
-    dp.startup.register(on_startup)
-    dp.shutdown.register(on_shutdown)
-    dp.message.outer_middleware(GetClientMiddleware())
-
-    app = web.Application()
-    webhook_requests_handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
-    webhook_requests_handler.register(app, path=config.webhook_path)
-    setup_application(app, dp, bot=bot)
-    web.run_app(app, host="0.0.0.0", port=9000)
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG,
-                        format='[%(asctime)s.%(msecs)03d] [%(process)d] [%(levelname)1.1s] [%(name)s]:\t%(message)s',
-                        datefmt='%Y.%m.%d %H:%M:%S')
-    main()

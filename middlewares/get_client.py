@@ -22,6 +22,6 @@ class GetClientMiddleware(BaseMiddleware):
             return await handler(event, data)
         except Exception as ex:
             logger.error("Failed to get client by telegram_id", exc_info=ex)
-            await event.answer(f"Случилось что-то нехорошее 😟, но мы уже в курсе и чиним. "
-                               f"Скоро сервис снова будет работать!",
-                               parse_mode="HTML")
+            data['server_error'] = True
+        finally:
+            return await handler(event, data)

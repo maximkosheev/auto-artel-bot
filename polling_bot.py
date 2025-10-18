@@ -1,35 +1,17 @@
 import asyncio
 import logging
 
-from aiogram import Bot, Dispatcher, Router
-from aiogram.filters import Command
-from aiogram.types import Message
-
-from config import config, admins, PROJECT_NAME, BOT_NAME
+from bot import (
+    bot,
+    dp,
+    router,
+    out_of_order_router,
+    admin_consumer,
+    notify_admins
+)
+from config import BOT_NAME
 from handlers import register_client
-from handlers.admin_consumer import AdminConsumer
 from middlewares.get_client import GetClientMiddleware
-from models.client import Client
-
-bot = Bot(token=config.bot_token)
-router = Router()
-dp = Dispatcher()
-admin_consumer = AdminConsumer(config.amq_connection_url, bot)
-
-
-@router.message(Command("start"))
-async def cmd_start(message: Message, client: Client) -> None:
-    phrases = [f"Приветствую тебя <b>{message.chat.full_name}</b> в системе <b>{PROJECT_NAME}</b>"]
-    if client:
-        phrases.append(f"Вы уже зарегистрированы. Для работы воспользуйтесь меню бота")
-    else:
-        phrases.append("Перед началом работы нужно пройти короткую регистрацию.\nНажмите /register")
-    await message.answer(".\n".join(phrases), parse_mode="HTML")
-
-
-async def notify_admins(message):
-    for admin_id in admins:
-        await bot.send_message(chat_id=admin_id, text=message)
 
 
 async def on_startup() -> None:
@@ -47,6 +29,7 @@ async def on_shutdown() -> None:
 
 async def main():
     dp.include_routers(
+        out_of_order_router,
         router,
         register_client.router
     )
@@ -56,6 +39,7 @@ async def main():
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG,
