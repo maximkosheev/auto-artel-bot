@@ -3,17 +3,16 @@ from aiogram import F
 from aiogram.filters import Command, MagicData
 from aiogram.types import Message
 
+import keyboards
 from config import config, admins, PROJECT_NAME
 from handlers.admin_consumer import AdminConsumer
-from models.client import Client
-import keyboards
+from handlers.client_handler import client_router
+from handlers.register_client import register_client_router
+from handlers.register_vehicle import register_vehicle_router
 
 bot = Bot(token=config.bot_token)
 
 router = Router()
-
-client_router = Router()
-client_router.message.filter(MagicData(F.client))
 
 out_of_order_router = Router()
 out_of_order_router.message.filter(MagicData(F.server_error.is_(True)))
@@ -28,28 +27,15 @@ async def handle_error(message: Message):
     print(f"Error message: {message.text}")
     await message.answer(f"Случилось что-то нехорошее 😟, но мы уже в курсе и чиним. "
                          f"Скоро сервис снова будет работать!",
-                         parse_mode="HTML")
-
-
-@client_router.message(Command("start"))
-async def cmd_start_client(message: Message, client: Client):
-    phrases = [f"Приветствую тебя <b>{client.name}</b> в системе <b>{PROJECT_NAME}</b>",
-               f"Вы уже зарегистрированы. Для работы воспользуйтесь меню бота"]
-    await message.answer(".\n".join(phrases), reply_markup=keyboards.client_default_keyboard(), parse_mode="HTML")
-
-
-@client_router.message()
-async def cmd_vehicle(message: Message, client: Client):
-    await message.answer("Ща я тебе покажу твои транспортные средства",
-                         reply_markup=keyboards.client_vehicle_keyboard(client.vehicleList),
-                         parse_mode="HTML")
+                         parse_mode="HTML",
+                         reply_markup=keyboards.remove_keyboard())
 
 
 @router.message(Command("start"))
 async def cmd_start(message: Message) -> None:
     phrases = [f"Приветствую тебя <b>{message.chat.full_name}</b> в системе <b>{PROJECT_NAME}</b>",
-               "Перед началом работы нужно пройти короткую регистрацию.\nНажмите /register"]
-    await message.answer(".\n".join(phrases), parse_mode="HTML")
+               "Перед началом работы нужно пройти короткую регистрацию."]
+    await message.answer(".\n".join(phrases), parse_mode="HTML", reply_markup=keyboards.default_keyboard(False))
 
 
 async def notify_admins(message):
@@ -57,3 +43,11 @@ async def notify_admins(message):
         await bot.send_message(chat_id=admin_id, text=message)
 
 
+def register_routers():
+    dp.include_routers(
+        out_of_order_router,
+        register_client_router,
+        register_vehicle_router,
+        client_router,
+        router
+    )

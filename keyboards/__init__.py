@@ -1,7 +1,33 @@
+from typing import Optional
+
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
-from aiogram.types import KeyboardButton
 
 from models.client import Vehicle
+
+
+def cancel_keyboard():
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="Отмена")]
+        ],
+        resize_keyboard=True
+    )
+
+
+def skip_and_cancel_keyboard():
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="Пропустить")],
+            [KeyboardButton(text="Отмена")]
+        ],
+        resize_keyboard=True
+    )
+
+
+def remove_keyboard():
+    return ReplyKeyboardRemove()
+
 
 def client_default_keyboard():
     builder = ReplyKeyboardBuilder()
@@ -14,7 +40,19 @@ def client_default_keyboard():
     return builder.as_markup(resize_keyboard=True)
 
 
-def client_vehicle_keyboard(vehicles: list | None):
+def anonymous_default_keyboard():
+    builder = ReplyKeyboardBuilder()
+    builder.row(
+        KeyboardButton(text="Регистрация")
+    )
+    return builder.as_markup(resize_keyboard=True)
+
+
+def default_keyboard(is_registered):
+    return client_default_keyboard() if is_registered else anonymous_default_keyboard()
+
+
+def client_vehicle_keyboard(vehicles: Optional[list]):
     builder = ReplyKeyboardBuilder()
     if vehicles is not None:
         for vehicle in vehicles:

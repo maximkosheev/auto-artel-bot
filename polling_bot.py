@@ -4,14 +4,11 @@ import logging
 from bot import (
     bot,
     dp,
-    router,
-    client_router,
-    out_of_order_router,
     admin_consumer,
-    notify_admins
+    notify_admins,
+    register_routers
 )
 from config import BOT_NAME
-from handlers import register_client
 from middlewares.get_client import GetClientMiddleware
 
 
@@ -29,12 +26,7 @@ async def on_shutdown() -> None:
 
 
 async def main():
-    dp.include_routers(
-        out_of_order_router,
-        client_router,
-        register_client.router,
-        router
-    )
+    register_routers()
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
     dp.message.outer_middleware(GetClientMiddleware())
