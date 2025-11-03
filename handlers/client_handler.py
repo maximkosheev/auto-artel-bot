@@ -1,4 +1,5 @@
 import logging
+
 from aiogram import F
 from aiogram import Router
 from aiogram.filters import Command, MagicData
@@ -10,6 +11,7 @@ import keyboards
 import utils
 from config import PROJECT_NAME
 from models.client import Client
+from services.order_service import order_service
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +29,8 @@ async def cmd_start_client(message: Message, client: Client):
 
 
 @client_router.message(F.text.lower().contains('в начало'))
-async def cmd_home(message: Message):
+async def cmd_home(message: Message, state: FSMContext):
+    await state.clear()
     await message.answer("Вы вернулись в главное меню",
                          parse_mode="HTML",
                          reply_markup=keyboards.default_keyboard(True))
@@ -56,8 +59,26 @@ async def cmd_vehicles(message: Message, client: Client):
 
 
 @client_router.message(F.text.lower().contains('мои заказы'))
-async def cmd_orders(message: Message, client: Client):
-    await message.answer("")
+async def cmd_orders(message: Message):
+    kb = [
+        [KeyboardButton(text="Новый заказ")],
+        [KeyboardButton(text="↩️ В начало")]
+    ]
+    keyboard = ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+    orders = await order_service.get_all(message.from_user.id)
+    if orders:
+        if len(orders) > 0:
+            orders_info = ""
+            for order in orders:
+                orders_info += f"\t - {utils.build_order_info(order)}\n"
+            await message.answer("Вот ваши заказы:\n"
+                                 f"{orders_info}",
+                                 parse_mode="HTML",
+                                 reply_markup=keyboard)
+        else:
+            await message.answer("У вас пока нет ни одного заказа",
+                                 parse_mode="HTML",
+                                 reply_markup=keyboard)
 
 
 @client_router.message()
