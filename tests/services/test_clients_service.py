@@ -20,7 +20,7 @@ class TestClientService(unittest.IsolatedAsyncioTestCase):
                 "name": "ClientName1",
                 "telegram_id": "12345",
                 "phone": "79999999999",
-                "vehicleList": [
+                "vehicle_list": [
                     {
                         "vin": "1234567890",
                         "manufacture": "Manufacture1",
@@ -43,11 +43,11 @@ class TestClientService(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.name, "ClientName1")
         self.assertEqual(result.telegram_id, 12345)
         self.assertEqual(result.phone, "79999999999")
-        self.assertEqual(len(result.vehicleList), 1)
-        self.assertEqual(result.vehicleList[0].vin, "1234567890")
-        self.assertEqual(result.vehicleList[0].manufacture, "Manufacture1")
-        self.assertEqual(result.vehicleList[0].model, "Model1")
-        self.assertEqual(result.vehicleList[0].year, 2000)
+        self.assertEqual(len(result.vehicle_list), 1)
+        self.assertEqual(result.vehicle_list[0].vin, "1234567890")
+        self.assertEqual(result.vehicle_list[0].manufacture, "Manufacture1")
+        self.assertEqual(result.vehicle_list[0].model, "Model1")
+        self.assertEqual(result.vehicle_list[0].year, 2000)
 
     @patch("services.clients_service.JWTAuthInterceptor", new=AsyncMock)
     async def test_get_by_telegram_id_error_response(self):

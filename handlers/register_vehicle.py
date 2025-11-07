@@ -106,6 +106,8 @@ async def register_vehicle_complete(message: Message, state: FSMContext):
             await message.answer(text="Новое транспортное средство зарегистрировано",
                                  parse_mode="HTML",
                                  reply_markup=default_keyboard(True))
+        else:
+            raise RuntimeError("Транспортное средство не зарегистрировано")
     except Exception as ex:
         logger.error("Failed to register new vehicle", exc_info=ex)
         await message.answer(text="При регистрации транспортного средства возникла ошибка.",

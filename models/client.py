@@ -11,7 +11,11 @@ class Vehicle(BaseModel):
 
 
 class Client(BaseModel):
+    id: int
     name: str
     telegram_id: int
     phone: str
-    vehicleList: list[Vehicle]
+    vehicle_list: list[Vehicle] | None = None
+
+    def has_any_vehicle(self):
+        return self.vehicle_list is not None and len(self.vehicle_list) > 0

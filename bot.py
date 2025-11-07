@@ -9,6 +9,7 @@ from handlers.admin_consumer import AdminConsumer
 from handlers.client_handler import client_router
 from handlers.register_client import register_client_router
 from handlers.register_vehicle import register_vehicle_router
+from handlers.register_order import register_order_router
 
 bot = Bot(token=config.bot_token)
 
@@ -48,6 +49,7 @@ def register_routers():
         out_of_order_router,
         register_client_router,
         register_vehicle_router,
+        register_order_router,
         client_router,
         router
     )
