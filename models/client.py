@@ -13,8 +13,8 @@ class Vehicle(BaseModel):
 class Client(BaseModel):
     id: int
     name: str
-    telegram_id: int
-    phone: str
+    telegram_id: int | None = None
+    phone: str | None = None
     vehicle_list: list[Vehicle] | None = None
 
     def has_any_vehicle(self):

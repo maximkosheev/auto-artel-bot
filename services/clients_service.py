@@ -33,7 +33,7 @@ class ClientsService:
         })
         if resp.status == 200:
             client = await resp.json()
-            return Client.model_validate(client)
+            return Client.model_validate(client, strict=True)
         elif resp.status == 404:
             return None
         else:

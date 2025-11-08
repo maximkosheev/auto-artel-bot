@@ -3,6 +3,7 @@ from typing import Dict, Any
 
 from config import config
 from models.client import Client
+from models.order import Order
 from services.admin_service import JWTAuthInterceptor
 
 logger = logging.getLogger(__name__)
@@ -22,7 +23,8 @@ class OrderService:
         })
 
         if resp.status == 200:
-            return []
+            orders = await resp.json()
+            return [Order.model_validate(order) for order in orders]
         else:
             logger.error(f"Get client orders failed with status {resp.status}")
             return None

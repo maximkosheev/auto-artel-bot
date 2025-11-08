@@ -14,8 +14,8 @@ class OrderItem(BaseModel):
 
 class Order(BaseModel):
     id: int | None = None
-    client_status: str = "Новый"
-    manager: str = "Не назначен"
+    client_status: str | None = "Новый"
+    manager: str | None = "Не назначен"
     created: datetime.datetime | None = None
     initial_requirements: str
     order_item_list: list[OrderItem] | None = None

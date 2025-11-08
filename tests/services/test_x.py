@@ -15,6 +15,3 @@ class Test(unittest.TestCase):
             url = url.replace(f"<{key}>", path_params[key])
         self.assertEqual(url, "/clients/123/detail/")
 
-
-if __name__ == "__main__":
-    unittest.main()

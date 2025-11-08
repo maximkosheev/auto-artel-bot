@@ -17,18 +17,19 @@ class TestClientService(unittest.IsolatedAsyncioTestCase):
         mock_response = AsyncMock(spec=ClientResponse)
         mock_response.status = 200
         mock_response.json.return_value = {
-                "name": "ClientName1",
-                "telegram_id": "12345",
-                "phone": "79999999999",
-                "vehicle_list": [
-                    {
-                        "vin": "1234567890",
-                        "manufacture": "Manufacture1",
-                        "model": "Model1",
-                        "year": 2000
-                    }
-                ]
-            }
+            "id": 1,
+            "name": "ClientName1",
+            "telegram_id": 12345,
+            "phone": "79999999999",
+            "vehicle_list": [
+                {
+                    "vin": "1234567890",
+                    "manufacture": "Manufacture1",
+                    "model": "Model1",
+                    "year": 2000
+                }
+            ]
+        }
         self.mock_auth_client.get.return_value = mock_response
         telegram_id = 3
 
