@@ -10,7 +10,9 @@ from aiogram.types import Message
 import keyboards
 import utils
 from config import PROJECT_NAME
+from mappers.chat_message_mapper import ChatMessageMapper
 from models.client import Client
+from services.chat_service import ChatService
 from services.order_service import order_service
 
 logger = logging.getLogger(__name__)
@@ -81,9 +83,15 @@ async def cmd_orders(message: Message, client: Client):
 
 
 @client_router.message()
-async def message_to_chat(message: Message, client: Client, state: FSMContext):
-    logger.debug(f"Current fsm context state is: {await state.get_state()}, "
-                 f"fsm context data is: {await state.get_data()}")
-    await message.answer("Ваше сообщение отправлено администратору. Скоро Вам ответят, ожидайте.",
-                         parse_mode="HTML",
-                         reply_markup=keyboards.default_keyboard(True))
+async def message_to_chat(message: Message, client: Client):
+    service = ChatService()
+    chat_message = ChatMessageMapper.to_chat_message(message)
+    send = service.send_chat_message(client.id, chat_message)
+    if send:
+        await message.answer("Ваше сообщение отправлено администратору. Скоро Вам ответят, ожидайте.",
+                             parse_mode="HTML",
+                             reply_markup=keyboards.default_keyboard(True))
+    else:
+        await message.answer("Не удалось отправить сообщение администратору. Попробуйте позже.",
+                             parse_mode="HTML",
+                             reply_markup=keyboards.default_keyboard(True))

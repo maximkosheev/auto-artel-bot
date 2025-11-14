@@ -1,7 +1,9 @@
-import json
 import logging
 
 import aio_pika
+
+import config
+from models.notices import AutomaticNotice
 
 logger = logging.getLogger(__name__)
 
@@ -21,23 +23,18 @@ class AdminConsumer:
         await self._channel.close()
         await self._connection.close()
 
-    async def complete_registration_handler(self):
-        queue = await self._channel.declare_queue(name="registration_completed", durable=True)
+    async def automatic_notice_handler(self):
+        queue = await self._channel.declare_queue(name="automatic_notice", durable=True)
         async with queue.iterator() as queue_iter:
-            async for message in queue_iter:
-                async with message.process() as incoming_message:
+            async for notice in queue_iter:
+                async with notice.process() as incoming_notice:
                     try:
-                        logger.debug("Received message from 'registration_completed' queue: {}"
-                                     .format(incoming_message.body))
-                        data = json.loads(incoming_message.body.decode('utf-8'))
-                        logger.info("Client {} finished registration {}"
-                                    .format(data["telegram_id"], data["status"]))
-                        if data["status"] == "success":
-                            await self._bot.send_message(chat_id=data["telegram_id"],
-                                                         text="Аккаунт FatSecret.com успешно подключен")
-                        else:
-                            await self._bot.send_message(chat_id=data["telegram_id"],
-                                                         text="При подключении аккаунта FatSecret.com возникла ошибка. "
-                                                              "Попробуйте позже или обратитесь к администратору.")
+                        logger.debug("Received notice from 'automatic_notice' queue: {}"
+                                     .format(incoming_notice.body))
+                        notice = AutomaticNotice.model_validate_json(incoming_notice.body.decode('utf-8'))
+                        message = (f"<b>Это системное сообщение от {config.PROJECT_NAME}. "
+                                   f"На него не нужно отвечать</b>\n"
+                                   f"{notice.data['text']}")
+                        await self._bot.send_message(chat_id=notice.to, text=message, parse_mode="HTML")
                     except Exception as e:
-                        logger.error("Error occurred while process message from registration_completed queue: {}".format(e))
+                        logger.error("Error occurred while process notice from automatic_notice queue:", exc_info=e)
