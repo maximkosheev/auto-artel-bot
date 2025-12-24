@@ -15,7 +15,15 @@ class AutomaticNotice(BaseModel):
 
 
 class ChatNotice(BaseModel):
-    manager: str | None = None
+    # идентификатор сообщения в БД
+    id: int
+    # идентификатор клиента в БД, которому направляется сообщение
     to: int
-    parent_message_id: int | None = None
+    # Идентификатор чата с клиентом в Telegram
+    to_telegram_id: int
+    # Имя менеджера, который отправил сообщение
+    manager: str | None = None
+    # Собственно текст сообщения
     text: str
+    # Идентификатор сообщения в Telegram, в ответ на который пришло это сообщение
+    reply_to_telegram_id: int | None = None

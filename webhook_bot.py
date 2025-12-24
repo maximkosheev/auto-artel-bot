@@ -18,6 +18,7 @@ from middlewares.get_client import GetClientMiddleware
 async def on_startup() -> None:
     await admin_consumer.setup()
     asyncio.create_task(admin_consumer.automatic_notice_handler(), name="automatic_notice_handler")
+    asyncio.create_task(admin_consumer.chat_message_handler(), name="chat_message_handler")
     await bot.set_webhook(config.bot_webhook_uri)
     await notify_admins(f"Бот {config.BOT_NAME} запущен")
 

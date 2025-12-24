@@ -133,6 +133,8 @@ class JWTAuthInterceptor:
         headers = kwargs.get('headers', {})
         kwargs['headers'] = self._inject_auth_header(headers)
 
+        logger.debug(f"Send request: {kwargs}")
+
         try:
             response = await self.session.request(method, url, **kwargs)
             if response.status == 401:

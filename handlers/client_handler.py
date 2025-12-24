@@ -86,7 +86,7 @@ async def cmd_orders(message: Message, client: Client):
 async def message_to_chat(message: Message, client: Client):
     service = ChatService()
     chat_message = ChatMessageMapper.to_chat_message(message)
-    send = service.send_chat_message(client.id, chat_message)
+    send = await service.send_chat_message(client.id, chat_message)
     if send:
         await message.answer("Ваше сообщение отправлено администратору. Скоро Вам ответят, ожидайте.",
                              parse_mode="HTML",

@@ -2,8 +2,7 @@ from pydantic import BaseModel
 
 
 class ChatMessage(BaseModel):
-    id: int
-    from_client_id: int
-    reply_to_id: int
-    text: str | None = None
+    message_telegram_id: int
+    reply_to_message_telegram_id: int | None = None
+    text: str
     media: list[str] | None = None
