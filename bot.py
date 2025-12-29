@@ -39,6 +39,13 @@ async def cmd_start(message: Message) -> None:
     await message.answer(".\n".join(phrases), parse_mode="HTML", reply_markup=keyboards.default_keyboard(False))
 
 
+@router.message()
+async def unknown_message(message: Message) -> None:
+    phrases = [f"Приветствую тебя <b>{message.chat.full_name}</b> в системе <b>{PROJECT_NAME}</b>",
+               "Перед началом работы нужно пройти короткую регистрацию."]
+    await message.answer(".\n".join(phrases), parse_mode="HTML", reply_markup=keyboards.default_keyboard(False))
+
+
 async def notify_admins(message):
     for admin_id in admins:
         await bot.send_message(chat_id=admin_id, text=message)
