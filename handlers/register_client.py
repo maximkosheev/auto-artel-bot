@@ -71,7 +71,8 @@ async def register_client_complete(message: Message, state: FSMContext):
         if registered:
             await message.answer(text="Спасибо за регистрацию!\n"
                                       "Для продолжения работы воспользуйтесь меню это бота",
-                                 parse_mode="HTML")
+                                 parse_mode="HTML",
+                                 reply_markup=default_keyboard(True))
         else:
             await message.answer(text="Простите, но клиент с таким телефоном уже зарегистрирован.\n"
                                       "Обратитесь к администратору",
