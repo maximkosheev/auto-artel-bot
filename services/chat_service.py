@@ -1,19 +1,20 @@
 import logging
+from typing import Optional
 
 from config import config
 from models.chat import ChatMessage
-from services.admin_service import JWTAuthInterceptor
+from services.admin_service import jwt_auth_interceptor
 
 logger = logging.getLogger(__name__)
 
 CHAT_MESSAGE_PATH = f"{config.auto_artel_api_base_url}/chat/"
-UPDATE_CHAT_MESSAGE_PATH = f"{CHAT_MESSAGE_PATH}message/<message_id>/"
+UPDATE_CHAT_MESSAGE_PATH = f"{CHAT_MESSAGE_PATH}message/"
 
 
 class ChatService:
 
     def __init__(self):
-        self.auth_client = JWTAuthInterceptor()
+        self.auth_client = jwt_auth_interceptor
 
     async def send_chat_message(self, client_id, chat_message: ChatMessage):
         resp = await self.auth_client.post(CHAT_MESSAGE_PATH, json={
@@ -27,10 +28,19 @@ class ChatService:
             logger.error(f"Send chat message failed with status: {resp.status}")
             return False
 
-    async def update_chat_message(self, message_id, data: dict):
+    async def update_chat_message(self,
+                                  data: dict,
+                                  message_id: Optional[int] = None,
+                                  message_telegram_id: Optional[int] = None):
+        if message_id is None and message_telegram_id is None:
+            raise KeyError('The message_id or the message_telegram_id parameter must be specified')
+        if message_id is not None and message_telegram_id is not None:
+            raise KeyError('Either the message_id or the message_telegram_id could be specified')
+
         resp = await self.auth_client.patch(UPDATE_CHAT_MESSAGE_PATH,
-                                            path_params={
-                                                'message_id': message_id
+                                            params={
+                                                'id': message_id,
+                                                'telegram_id': message_telegram_id
                                             },
                                             json=data)
 
@@ -39,3 +49,6 @@ class ChatService:
         else:
             logger.error(f"Update chat message failed with status: {resp.status}")
             return False
+
+
+chat_service = ChatService()

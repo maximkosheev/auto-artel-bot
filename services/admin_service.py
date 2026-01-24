@@ -130,6 +130,9 @@ class JWTAuthInterceptor:
         for path_param in path_params:
             url = url.replace(f"<{path_param}>", str(path_params[path_param]))
 
+        params = {k: v for k, v in kwargs.pop('params', {}).items() if v is not None}
+        kwargs['params'] = params
+
         headers = kwargs.get('headers', {})
         kwargs['headers'] = self._inject_auth_header(headers)
 
@@ -173,3 +176,6 @@ class JWTAuthInterceptor:
 
     async def patch(self, url: str, **kwargs) -> aiohttp.ClientResponse:
         return await self.request('PATCH', url, **kwargs)
+
+
+jwt_auth_interceptor = JWTAuthInterceptor()

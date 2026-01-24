@@ -57,8 +57,9 @@ class AdminConsumer:
                             reply_to_message_id=incoming_message.reply_to_telegram_id
                         )
                         chat_service = ChatService()
-                        await chat_service.update_chat_message(incoming_message.id, {
-                            'telegram_id': msg.message_id
-                        })
+                        await chat_service.update_chat_message(message_id=incoming_message.id,
+                                                               data={
+                                                                   'telegram_id': msg.message_id
+                                                               })
                     except Exception as e:
                         logger.error("Error occurred while process notice from 'chat_messages' queue:", e)
