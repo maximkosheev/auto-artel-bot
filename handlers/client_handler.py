@@ -14,6 +14,7 @@ from mappers.chat_message_mapper import ChatMessageMapper
 from models.client import Client
 from services.chat_service import chat_service
 from services.order_service import order_service
+from services.cache_service import cache_service
 
 logger = logging.getLogger(__name__)
 
@@ -87,9 +88,10 @@ async def message_to_chat(message: Message, client: Client):
     chat_message = ChatMessageMapper.to_chat_message(message)
     send = await chat_service.send_chat_message(client.id, chat_message)
     if send:
-        await message.answer("Ваше сообщение отправлено администратору. Скоро Вам ответят, ожидайте.",
-                             parse_mode="HTML",
-                             reply_markup=keyboards.default_keyboard(True))
+        if not cache_service.check_and_set_client_chat_auto_answer_marker(message.from_user.id):
+            await message.answer("Ваше сообщение отправлено администратору. Скоро Вам ответят, ожидайте.",
+                                 parse_mode="HTML",
+                                 reply_markup=keyboards.default_keyboard(True))
     else:
         await message.answer("Не удалось отправить сообщение администратору. Попробуйте позже.",
                              parse_mode="HTML",
@@ -103,5 +105,3 @@ async def message_to_chat_edited(message: Message):
     })
     if not updated:
         logger.warning(f"Message telegram_id: {message.message_id} was not updated")
-
-

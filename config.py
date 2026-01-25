@@ -1,4 +1,4 @@
-from pydantic import SecretStr, HttpUrl
+from pydantic import SecretStr, HttpUrl, RedisDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     AMQ_URL: str
     AMQ_USER: str
     AMQ_PASSWORD: SecretStr
+
+    REDIS_URL: str
+    REDIS_USER: str
+    REDIS_USER_PASSWORD: SecretStr
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -51,6 +55,11 @@ class Settings(BaseSettings):
     def amq_connection_url(self):
         credentials = f"{self.AMQ_USER}:{self.AMQ_PASSWORD.get_secret_value()}"
         return self.AMQ_URL.replace("://", f"://{credentials}@")
+
+    @property
+    def cache_connection_url(self):
+        credentials = f"{self.REDIS_USER}:{self.REDIS_USER_PASSWORD.get_secret_value()}"
+        return self.REDIS_URL.replace("://", f"://{credentials}@")
 
 
 config = Settings()
