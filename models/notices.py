@@ -27,3 +27,5 @@ class ChatNotice(BaseModel):
     text: str
     # Идентификатор сообщения в Telegram, в ответ на который пришло это сообщение
     reply_to_telegram_id: int | None = None
+    # Идентификатор сообщения в Telegram, которое нужно отредактировать
+    edit_telegram_id: int | None = None

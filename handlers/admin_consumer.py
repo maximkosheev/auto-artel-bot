@@ -50,16 +50,24 @@ class AdminConsumer:
                         incoming_message = ChatNotice.model_validate_json(incoming_notice.body.decode('utf-8'))
                         message = (f"<b>Вам отвечает менеджер {incoming_message.manager}</b>\n"
                                    f"{incoming_message.text}")
-                        msg = await self._bot.send_message(
-                            chat_id=incoming_message.to_telegram_id,
-                            text=message,
-                            parse_mode="HTML",
-                            reply_to_message_id=incoming_message.reply_to_telegram_id
-                        )
-                        chat_service = ChatService()
-                        await chat_service.update_chat_message(message_id=incoming_message.id,
-                                                               data={
-                                                                   'telegram_id': msg.message_id
-                                                               })
+                        if incoming_message.edit_telegram_id:
+                            msg = await self._bot.edit_message_text(
+                                chat_id=incoming_message.to_telegram_id,
+                                message_id=incoming_message.edit_telegram_id,
+                                text=message,
+                                parse_mode="HTML"
+                            )
+                        else:
+                            msg = await self._bot.send_message(
+                                chat_id=incoming_message.to_telegram_id,
+                                text=message,
+                                parse_mode="HTML",
+                                reply_to_message_id=incoming_message.reply_to_telegram_id
+                            )
+                            chat_service = ChatService()
+                            await chat_service.update_chat_message(message_id=incoming_message.id,
+                                                                   data={
+                                                                       'telegram_id': msg.message_id
+                                                                   })
                     except Exception as e:
                         logger.error("Error occurred while process notice from 'chat_messages' queue:", e)
