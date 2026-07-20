@@ -68,8 +68,9 @@ async def cmd_vehicles(message: Message, client: Client):
 @client_router.message(F.text.lower().contains('мой профиль'))
 async def cmd_profile(message: Message, client: Client):
     kb = [
-        [KeyboardButton(text=f"Изменить имя")],
-        [KeyboardButton(text=f"Изменить телефон")],
+        [KeyboardButton(text="Изменить имя")],
+        [KeyboardButton(text="Изменить телефон")],
+        [KeyboardButton(text="↩️ В начало")],
     ]
     keyboard = ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
     await message.answer("Вы можете изменить Ваше имя и телефон.\n"
@@ -80,7 +81,7 @@ async def cmd_profile(message: Message, client: Client):
 
 
 @client_router.message(StateFilter(ClientProfile), F.text.lower() == "отмена")
-async def cmd_change_profile_cancel(message: Message, state: FSMContext, client:Client):
+async def cmd_change_profile_cancel(message: Message, state: FSMContext, client: Client):
     await state.clear()
     await message.answer('Операция отменена',
                          parse_mode='HTML',
