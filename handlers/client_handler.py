@@ -124,7 +124,7 @@ async def cmd_change_name(message: Message, state: FSMContext, client:Client):
 @client_router.message(StateFilter(None), default_state, F.text.lower() == 'изменить телефон')
 async def cmd_change_phone_init(message: Message, state: FSMContext, client:Client):
     await state.set_state(ClientProfile.change_phone)
-    await message.answer("Укажите телефон для связи в формате +7(десять цифр)",
+    await message.answer("Укажите телефон для связи в формате +7XXXXXXXXXX(десять цифр)",
                          parse_mode='HTML',
                          reply_markup=keyboards.cancel_keyboard())
 
@@ -133,7 +133,7 @@ async def cmd_change_phone_init(message: Message, state: FSMContext, client:Clie
 async def cmd_change_phone(message: Message, state: FSMContext, client:Client):
     phone_match = re.match("^\\+7\\d{10}$", message.text)
     if not phone_match:
-        return await message.answer("Неверный формат. Введите номер телефона в формате +7(десять цифр)",
+        return await message.answer("Неверный формат. Введите номер телефона в формате +7XXXXXXXXXX(десять цифр)",
                                     parse_mode='HTML',
                                     reply_markup=keyboards.cancel_keyboard())
 
@@ -149,7 +149,9 @@ async def cmd_change_phone(message: Message, state: FSMContext, client:Client):
                                  parse_mode='HTML',
                                  reply_markup=keyboards.default_keyboard(True))
         else:
-            await message.answer('Изменить номер телефона не получилось. Обратитесь к администратору',
+            await message.answer('Изменить номер телефона не получилось.\n'
+                                 'Вероятно клиент с таким номером телефона уже зарегистрирован.\n'
+                                 'Обратитесь к администратору',
                                  parse_mode='HTML',
                                  reply_markup=keyboards.default_keyboard(True))
     except Exception as ex:

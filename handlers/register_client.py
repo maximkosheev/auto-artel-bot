@@ -57,7 +57,7 @@ async def register_client_step2(message: Message, state: FSMContext):
 async def register_client_complete(message: Message, state: FSMContext):
     phone_match = re.match("^\\+7\\d{10}$", message.text)
     if not phone_match:
-        return await message.answer("Введите номер телефона в формате +7(десять цифр)")
+        return await message.answer("Введите номер телефона в формате +7XXXXXXXXXX(десять цифр)")
 
     await state.update_data(phone=message.text)
     try:
