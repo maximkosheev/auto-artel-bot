@@ -33,6 +33,9 @@ def client_default_keyboard():
     builder.row(
         KeyboardButton(text="📦 Мои заказы")
     )
+    builder.row(
+        KeyboardButton(text="👤 Мой профиль")
+    )
     return builder.as_markup(resize_keyboard=True)
 
 

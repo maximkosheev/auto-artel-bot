@@ -1,9 +1,11 @@
 import logging
+import re
 
 from aiogram import F
 from aiogram import Router
-from aiogram.filters import Command, MagicData
+from aiogram.filters import Command, MagicData, StateFilter
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import default_state
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from aiogram.types import Message
 
@@ -12,9 +14,11 @@ import utils
 from config import PROJECT_NAME
 from mappers.chat_message_mapper import ChatMessageMapper
 from models.client import Client
-from services.chat_service import chat_service
-from services.order_service import order_service
 from services.cache_service import cache_service
+from services.chat_service import chat_service
+from services.clients_service import ClientsService
+from services.order_service import order_service
+from states import ClientProfile
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +63,103 @@ async def cmd_vehicles(message: Message, client: Client):
                              "Воспользуйтесь меню для регистрации",
                              reply_markup=keyboard,
                              parse_mode="HTML")
+
+
+@client_router.message(F.text.lower().contains('мой профиль'))
+async def cmd_profile(message: Message, client: Client):
+    kb = [
+        [KeyboardButton(text=f"Изменить имя")],
+        [KeyboardButton(text=f"Изменить телефон")],
+    ]
+    keyboard = ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+    await message.answer("Вы можете изменить Ваше имя и телефон.\n"
+                         f"Текущее имя: {client.name}\n"
+                         f"Текущий телефон: {client.phone}",
+                         reply_markup=keyboard,
+                         parse_mode="HTML")
+
+
+@client_router.message(StateFilter(ClientProfile), F.text.lower() == "отмена")
+async def cmd_change_profile_cancel(message: Message, state: FSMContext, client:Client):
+    await state.clear()
+    await message.answer('Операция отменена',
+                         parse_mode='HTML',
+                         reply_markup=keyboards.default_keyboard(True))
+
+
+@client_router.message(StateFilter(None), default_state, F.text.lower() == 'изменить имя')
+async def cmd_change_name_init(message: Message, state: FSMContext, client:Client):
+    await state.set_state(ClientProfile.change_name)
+    await message.answer("Представьтесь, пожалуйста",
+                         parse_mode='HTML',
+                         reply_markup=keyboards.cancel_keyboard())
+
+
+@client_router.message(ClientProfile.change_name)
+async def cmd_change_name(message: Message, state: FSMContext, client:Client):
+    await state.update_data(name=message.text)
+    try:
+        service = ClientsService()
+        profile_data = await state.get_data()
+        updated = await service.update_profile(client.id, profile={
+            'name': profile_data['name']
+        })
+        if updated:
+            await message.answer('Ваше имя успешно изменено',
+                                 parse_mode='HTML',
+                                 reply_markup=keyboards.default_keyboard(True))
+        else:
+            await message.answer('Изменить имя не получилось. Обратитесь к администратору',
+                                 parse_mode='HTML',
+                                 reply_markup=keyboards.default_keyboard(True))
+    except Exception as ex:
+        logger.error("Failed to update client profile", exc_info=ex)
+        await message.answer("При обновлении профиля случилась ошибка. Попробуйте ещё раз позже.",
+                             parse_mode='HTML',
+                             reply_markup=keyboards.default_keyboard(True))
+    finally:
+        await state.clear()
+
+
+@client_router.message(StateFilter(None), default_state, F.text.lower() == 'изменить телефон')
+async def cmd_change_phone_init(message: Message, state: FSMContext, client:Client):
+    await state.set_state(ClientProfile.change_phone)
+    await message.answer("Укажите телефон для связи в формате +7(десять цифр)",
+                         parse_mode='HTML',
+                         reply_markup=keyboards.cancel_keyboard())
+
+
+@client_router.message(ClientProfile.change_phone)
+async def cmd_change_phone(message: Message, state: FSMContext, client:Client):
+    phone_match = re.match("^\\+7\\d{10}$", message.text)
+    if not phone_match:
+        return await message.answer("Неверный формат. Введите номер телефона в формате +7(десять цифр)",
+                                    parse_mode='HTML',
+                                    reply_markup=keyboards.cancel_keyboard())
+
+    await state.update_data(phone=message.text)
+    try:
+        service = ClientsService()
+        profile_data = await state.get_data()
+        updated = await service.update_profile(client.id, profile={
+            'phone': profile_data['phone']
+        })
+        if updated:
+            await message.answer('Номер телефона успешно изменено',
+                                 parse_mode='HTML',
+                                 reply_markup=keyboards.default_keyboard(True))
+        else:
+            await message.answer('Изменить номер телефона не получилось. Обратитесь к администратору',
+                                 parse_mode='HTML',
+                                 reply_markup=keyboards.default_keyboard(True))
+    except Exception as ex:
+        logger.error("Failed to update client profile", exc_info=ex)
+        await message.answer("При обновлении профиля случилась ошибка. Попробуйте ещё раз позже.",
+                             parse_mode='HTML',
+                             reply_markup=keyboards.default_keyboard(True))
+    finally:
+        await state.clear()
+
 
 
 @client_router.message(F.text.lower().contains('мои заказы'))

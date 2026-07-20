@@ -48,7 +48,7 @@ async def cancel_registration(message: Message, state: FSMContext, client: Clien
 async def register_client_step2(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
     await state.set_state(RegisterClient.phone)
-    await message.answer(text="Спасибо. Теперь напишите телефон для связи в формате +7XXXXXXXXXX",
+    await message.answer(text="Спасибо. Теперь напишите телефон для связи в формате +7(десять цифр)",
                          parse_mode="HTML",
                          reply_markup=cancel_keyboard())
 
@@ -57,7 +57,7 @@ async def register_client_step2(message: Message, state: FSMContext):
 async def register_client_complete(message: Message, state: FSMContext):
     phone_match = re.match("^\\+7\\d{10}$", message.text)
     if not phone_match:
-        return await message.answer("Введите номер телефона в формате +7XXXXXXXXXX")
+        return await message.answer("Введите номер телефона в формате +7(десять цифр)")
 
     await state.update_data(phone=message.text)
     try:

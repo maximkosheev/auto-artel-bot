@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 CLIENTS_PATH = f"{config.auto_artel_api_base_url}/clients/"
 REGISTER_PATH = CLIENTS_PATH
 DETAIL_PATH = f"{CLIENTS_PATH}<telegram_id>/detail/"
+UPDATE_PROFILE_PATH = f"{CLIENTS_PATH}<pk>/profile/"
 
 
 class ClientsService:
@@ -39,3 +40,15 @@ class ClientsService:
         else:
             logger.error(f"Get client by telegram_id failed with status: {resp.status}")
             raise AutoArtelHttpException("Server response with error")
+
+    async def update_profile(self, client_id, profile: Dict[str, Any]) -> bool:
+        resp = await self.auth_client.patch(UPDATE_PROFILE_PATH,
+                                            path_params={
+                                                'pk': client_id
+                                            },
+                                            json=profile)
+        if resp.status == 200:
+            return True
+        else:
+            logger.error(f"Update profile failed wih status: {resp.status}")
+            return False
