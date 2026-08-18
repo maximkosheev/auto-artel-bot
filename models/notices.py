@@ -5,11 +5,13 @@ from pydantic import BaseModel
 
 
 class AutomaticNoticeType(Enum):
-    TEXT = 1
+    TEXT = 'TEXT'
+    ORDER_AGREEMENT_REQUIRED = 'ORDER_AGREEMENT_REQUIRED'
 
 
 class AutomaticNotice(BaseModel):
     to: int
+    to_telegram_id: int
     type: AutomaticNoticeType
     data: dict[str, Any]
 

@@ -1,12 +1,17 @@
 import logging
 
 import aio_pika
+from aiogram.types import InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 import config
-from models.notices import AutomaticNotice, ChatNotice
+from models.notices import AutomaticNotice, ChatNotice, AutomaticNoticeType
 from services.chat_service import ChatService
 
 logger = logging.getLogger(__name__)
+
+
+NOTICE_MESSAGE_HEADER = f"<b>Это системное сообщение от {config.PROJECT_NAME}. На него не нужно отвечать</b>\n"
 
 
 class AdminConsumer:
@@ -33,12 +38,24 @@ class AdminConsumer:
                         logger.debug("Received notice from 'automatic_notice' queue: {}"
                                      .format(incoming_notice.body))
                         notice = AutomaticNotice.model_validate_json(incoming_notice.body.decode('utf-8'))
-                        message = (f"<b>Это системное сообщение от {config.PROJECT_NAME}. "
-                                   f"На него не нужно отвечать</b>\n"
-                                   f"{notice.data['text']}")
-                        await self._bot.send_message(chat_id=notice.to, text=message, parse_mode="HTML")
+                        match notice.type:
+                            case AutomaticNoticeType.ORDER_AGREEMENT_REQUIRED:
+                                await self.handle_order_agreement_required_notice(notice)
+                            case _:
+                                message = (f"<b>Это системное сообщение от {config.PROJECT_NAME}. "
+                                           f"На него не нужно отвечать</b>\n"
+                                           f"{notice.data['text']}")
+                                await self._bot.send_message(chat_id=notice.to, text=message, parse_mode="HTML")
                     except Exception as e:
                         logger.error("Error occurred while process notice from automatic_notice queue:", exc_info=e)
+
+    async def handle_order_agreement_required_notice(self, notice):
+        builder = InlineKeyboardBuilder()
+        builder.row(InlineKeyboardButton(text="Станица заказа", url=notice.data['details']['link']))
+        await self._bot.send_message(chat_id=notice.to_telegram_id,
+                                     text=f"{NOTICE_MESSAGE_HEADER}{notice.data['text']}",
+                                     parse_mode="HTML",
+                                     reply_markup=builder.as_markup())
 
     async def chat_message_handler(self):
         queue = await self._channel.declare_queue(name="chat_messages", durable=True)
