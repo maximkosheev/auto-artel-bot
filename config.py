@@ -61,6 +61,14 @@ class Settings(BaseSettings):
         credentials = f"{self.REDIS_USER}:{self.REDIS_USER_PASSWORD.get_secret_value()}"
         return self.REDIS_URL.replace("://", f"://{credentials}@")
 
+    @property
+    def auto_notice_queue(self):
+        return 'automatic_notifications'
+
+    @property
+    def chat_messages_queue(self):
+        return 'chat_messages'
+
 
 config = Settings()
 

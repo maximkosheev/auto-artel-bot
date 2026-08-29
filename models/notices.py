@@ -6,12 +6,15 @@ from pydantic import BaseModel
 
 class AutomaticNoticeType(Enum):
     TEXT = 'TEXT'
-    ORDER_AGREEMENT_REQUIRED = 'ORDER_AGREEMENT_REQUIRED'
+    ORDER_ACTION_REQUIRED = 'ORDER_ACTION_REQUIRED'
 
 
 class AutomaticNotice(BaseModel):
+    # идентификатор клиента в БД, которому направляется сообщение
     to: int
+    # Идентификатор чата с клиентом в Telegram
     to_telegram_id: int
+    # тип уведомления
     type: AutomaticNoticeType
     data: dict[str, Any]
 
