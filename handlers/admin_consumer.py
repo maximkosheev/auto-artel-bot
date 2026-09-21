@@ -4,13 +4,11 @@ import aio_pika
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from config import PROJECT_NAME, config
+from config import config
 from models.notices import AutomaticNotice, ChatNotice, AutomaticNoticeType
 from services.chat_service import ChatService
 
 logger = logging.getLogger(__name__)
-
-NOTICE_MESSAGE_HEADER = f"<b>Это системное сообщение от {PROJECT_NAME}. На него не нужно отвечать</b>\n"
 
 
 class AdminConsumer:
@@ -54,13 +52,13 @@ class AdminConsumer:
             reply_markup = None
 
         await self._bot.send_message(chat_id=notice.to_telegram_id,
-                                     text=f"{NOTICE_MESSAGE_HEADER}{notice.data['text']}",
+                                     text=f"{notice.data['text']}",
                                      parse_mode="HTML",
                                      reply_markup=reply_markup)
 
     async def handle_text_notice(self, notice):
         await self._bot.send_message(chat_id=notice.to_telegram_id,
-                                     text=f"{NOTICE_MESSAGE_HEADER}{notice.data['text']}",
+                                     text=f"{notice.data['text']}",
                                      parse_mode="HTML")
 
     async def chat_message_handler(self):
