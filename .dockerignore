@@ -1,0 +1,50 @@
+venv/
+.venv/
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*$py.class
+*.py[cod]
+*.log
+.pgpass
+*.sql
+
+# Django
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+tests/
+test.py
+setup.cfg
+
+# Documentation
+README.md
+docs/
+
+# OS
+.DS_Store
+Thumbs.db
+

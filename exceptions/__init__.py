@@ -1,0 +1,4 @@
+
+
+class AutoArtelHttpException(Exception):
+    pass
